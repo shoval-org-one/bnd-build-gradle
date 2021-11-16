@@ -6,6 +6,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Formatter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -14,11 +15,11 @@ import org.osgi.util.promise.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import aQute.bnd.exceptions.Exceptions;
 import aQute.bnd.http.HttpClient;
 import aQute.bnd.http.HttpRequestException;
 import aQute.bnd.service.url.State;
 import aQute.bnd.service.url.TaggedData;
-import aQute.bnd.exceptions.Exceptions;
 import aQute.libg.cryptography.MD5;
 import aQute.libg.cryptography.SHA1;
 import aQute.libg.uri.URIUtil;
@@ -129,7 +130,15 @@ public class MavenRemoteRepository extends MavenBackingRepository {
 			switch (go.getState()) {
 				case NOT_FOUND :
 				case OTHER :
-					throw new IOException("Could not store " + path + " from " + file + " with " + go);
+					try (Formatter formatter = new Formatter()) {
+						formatter.format("Could not store %s from %s with %s%n", path, file, go);
+						switch (go.getResponseCode()) {
+							case HttpURLConnection.HTTP_UNAUTHORIZED :
+								client.reportSettings(formatter);
+								break;
+						}
+						throw new IOException(formatter.toString());
+					}
 
 				case UNMODIFIED :
 				case UPDATED :

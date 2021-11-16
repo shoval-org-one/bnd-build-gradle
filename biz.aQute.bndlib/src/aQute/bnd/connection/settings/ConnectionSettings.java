@@ -597,6 +597,7 @@ public class ConnectionSettings {
 		getServerDTOs().forEach(server -> {
 			f.format("%n");
 			f.format("Id                  %s%n", server.id);
+			f.format("Match               %s%n", server.match);
 			f.format("Username            %s%n", server.username);
 			f.format("Password            %s%n", server.password == null ? "<>" : "*******");
 			f.format("Private Key         %s%n", server.privateKey == null ? "<>" : "*******");
