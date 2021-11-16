@@ -1,6 +1,8 @@
 /*
  * dist Gradle build script
  */
+import aQute.bnd.http.HttpClient
+import java.util.Formatter
 
 var jarDependencies = tasks.named("jarDependencies")
 
@@ -32,8 +34,18 @@ configure(parent) {
 		group = "build"
 	}
 
+	var debug = tasks.register("debug") {
+		doFirst {
+			def client = bndWorkspace.getPlugin(HttpClient.class)
+			try (Formatter formatter = new Formatter()) {
+				client.reportSettings(formatter);
+				println "settings: ${formatter.toString()}"
+			}
+		}
+	}
+
 	var publish = tasks.register("publish") {
-		dependsOn(releaseDependencies)
+		dependsOn(debug, releaseDependencies)
 		description = "Publishes the ${buildProject.name} project."
 		group = "release"
 	}

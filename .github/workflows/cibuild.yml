@@ -36,22 +36,12 @@ jobs:
     strategy:
       fail-fast: ${{ (github.repository != 'bndtools/bnd') || ((github.ref != 'refs/heads/master') && (github.ref != 'refs/heads/next')) || (github.event_name == 'pull_request') }}
       matrix:
-        os:
-        - 'ubuntu-latest'
-        java:
-        - '8'
-        - '11'
-        runner:
-        - 'xvfb-run --auto-servernum {0}'
         include:
         - os: 'ubuntu-latest'
           java: '17'
           runner: 'xvfb-run --auto-servernum {0}'
           canonical: true
           fetch-depth: '0'
-        - os: 'windows-latest'
-          java: '8'
-          runner: '{0}'
     name: Build JDK${{ matrix.java }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -72,13 +62,14 @@ jobs:
     - name: Build
       id: build
       run: |
+        cat $HOME/.m2/settings.xml
         ${{ format(matrix.runner, './.github/scripts/ci-build.sh') }}
     - name: Publish
       id: publish
       run: |
         ./.github/scripts/ci-publish.sh
       env:
-        CANONICAL: ${{ matrix.canonical && !strategy.fail-fast }}
+        CANONICAL: ${{ matrix.canonical }}
         JFROG_USERNAME: ${{ secrets.JFROG_USERNAME }}
         JFROG_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
     - name: Upload Test Reports
